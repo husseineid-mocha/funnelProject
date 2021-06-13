@@ -17,21 +17,18 @@ updateData()
 function updateData() {
     fetch('http://nestio.space/api/satellite/data')
         .then(response => response.json())
-        .then(data => dataArray.push({ altitude: data.altitude, time: Date(data.last_updated) }))
+        .then(data => dataArray.push({ altitude: data.altitude, time: data.last_updated }))
 
-    // let now = new Date()
-    // now.setMinutes(now.getMinutes() - 5)
-    // now = new Date(now);
-
-    dataArray.filter(item => {
-        newDate = new Date(item.time)
-        newDate < (newDate.setMinutes(newDate.getMinutes() + 5))
-
-        console.log(newDate, newDate.setMinutes(newDate.getMinutes() + 5))
-    })
-    console.log(dataArray)
+    if (dataArray[0]) {
+        let instanceEntry = new Date(dataArray[0].time) // need to create instance of Date class for time manipulation
+        let lastEntry = new Date(dataArray[dataArray.length - 1].time)
+            // console.log(instanceEntry.getTime(), lastEntry.getTime())
+            // console.log("SUBTRACT", lastEntry.getTime() - instanceEntry.getTime(), lastEntry.getTime() - instanceEntry.getTime() < 300000)
+        if (lastEntry.getTime() - instanceEntry.getTime() > 300000) { // making sure the difference is less than 5 seconds
+            dataArray.shift()
+        }
+    }
 }
-
 
 app.get("/stats", async(req, res) => {
     const newArray = dataArray.map(obj => obj.altitude)
@@ -48,6 +45,10 @@ app.get("/stats", async(req, res) => {
         average
     }
     res.send(JSON.stringify(responseData));
+})
+
+app.get('/health', async(req, res) => {
+    res.send('hello world')
 })
 
 // Define a port and start listening for connections.
