@@ -3,13 +3,18 @@ const fetch = require('node-fetch');
 
 const app = express();
 
-let dataArray = []; // needed to store the data from the last 5 mins
+// dataArray will store the values from the last 5 mins
+let dataArray = [];
 
-setInterval(() => { // the interval that will fetch the data every 10 secs
+// the interval that will fetch the data every 10 secs
+setInterval(() => {
     updateData()
 }, 10 * 1000)
-updateData() // needed so we have an initial load before the setInterval begins at second 10
 
+//initial load before the setInterval begins at second 10
+updateData()
+
+//function to retrieve the average of an array of integers
 function averageFunction(array) {
     const average = array.reduce((sum, value) => {
         return sum + value
@@ -23,6 +28,7 @@ function updateData() {
         .then(data => dataArray.push({ altitude: data.altitude, time: data.last_updated }))
         .then(() => {
             const lastEntry = new Date(dataArray[dataArray.length - 1].time)
+                //filter the dataArray by values that are less than 5 minutes old
             dataArray = dataArray.filter(item => {
                 const instanceEntry = new Date(item.time)
                 return lastEntry.getTime() - instanceEntry.getTime() < (300 * 1000)
@@ -61,6 +67,7 @@ function getHealth(dataArray) {
         return lastEntry.getTime() - minuteTime.getTime() < 60 * 1000
     })
 
+    // the averages for the last minute and last two minutes
     const oneMinAverage = averageFunction(oneMinuteBefore.map(item => item.altitude))
     const twoMinAverage = averageFunction(twoMinutesBefore.map(item => item.altitude))
 
