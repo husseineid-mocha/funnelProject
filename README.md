@@ -1,6 +1,4 @@
-# funnelProject
-
-## Running Locally
+# Funnel Project
 
 Make sure you have [Node.js](http://nodejs.org/) installed.
 
