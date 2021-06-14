@@ -3,10 +3,6 @@ const fetch = require('node-fetch');
 
 const app = express();
 
-app.get("/", (req, res) => {
-    res.send("Hello World!");
-});
-
 let dataArray = [];
 
 setInterval(() => {
@@ -47,53 +43,53 @@ app.get("/stats", async(req, res) => {
 
 
 app.get('/health', async(req, res) => {
-    let dataArrayHealth = dataArray.filter(item => {
+    let averageValue
+
+    let dataArrayHealth = dataArray.filter(item => { //array that contains last two minutes worth of altitudes
         let minuteTime = new Date(item.time)
         let lastEntry = new Date(dataArray[dataArray.length - 1].time)
-        return lastEntry.getTime() - minuteTime.getTime() < 60000
+        return lastEntry.getTime() - minuteTime.getTime() < 120000
     })
 
-    const newArrayHealth = dataArrayHealth.map(obj => obj.altitude)
-
-    const average = newArrayHealth.reduce((sum, value) => {
-        return sum + value
-    }, 0) / newArrayHealth.length
-
-    let message
-    let timeoutFlag
-
-    function timer() {
-        message = 'Sustained Low Earth Orbit Resumed'
-        let count = 60
-        return timer = setInterval(() => {
-            console.log('hello')
-            count--
-            if (count <= 0) {
-                timeoutFlag = false
-                clearInterval(timer)
-            }
-            console.log(count)
-        }, 10000)
+    function averageFunction(array) { // function to average array
+        let mappedArray = array.map(obj => obj.altitude)
+        const average = mappedArray.reduce((sum, value) => {
+            return sum + value
+        }, 0) / mappedArray.length
+        return average
     }
 
-    if (average < 160) {
+    function lastMinuteFilter(filterArray) { // array to filter the last minute
+        filterArray = filterArray.filter(item => {
+            let minuteTime = new Date(item.time)
+            let lastEntry = new Date(filterArray[filterArray.length - 1].time)
+            return lastEntry.getTime() - minuteTime.getTime() < 60000
+        })
+        return filterArray
+    }
+
+    let message
+
+    averageValue = averageFunction(lastMinuteFilter(dataArrayHealth))
+    message = 'Altitude is A-OK' // baseline message
+    if (averageValue < 160) { // if average value is less than 160
         message = 'WARNING: RAPID ORBITAL DECAY IMMINENT'
-        timeoutFlag = true
-        count = 60
-    } else {
-        timer()
-            // if (timeoutFlag) {
-            //     timer()
-            // } else {
-            //     message = 'Altitude is A-OK'
-            // }
+    } else { // if greater than 160 we check the previous minute average excluding the last data point
+        dataArrayHealthCopy = dataArrayHealth.slice(0)
+        while (dataArrayHealthCopy.length > 6) {
+            dataArrayHealthCopy.pop()
+            oldAverageValue = averageFunction(lastMinuteFilter(dataArrayHealthCopy))
+            if (oldAverageValue < 160) { // if that average is less than 160 then we were below 160 within the last minute
+                message = 'Sustained Low Earth Orbit Resumed'
+                break
+            }
+        }
     }
 
     let responseDataHealth = {
         message: message,
-        average: average,
-        array: dataArrayHealth,
-        flag: timeoutFlag
+        average: averageValue,
+        array: dataArrayHealth
     }
 
     res.send(JSON.stringify(responseDataHealth))
