@@ -3,12 +3,12 @@ const fetch = require('node-fetch');
 
 const app = express();
 
-let dataArray = [];
+let dataArray = []; // needed to store the data from the last 5 mins
 
-setInterval(() => {
+setInterval(() => { // the interval that will fetch the data every 10 secs
     updateData()
 }, 10 * 1000)
-updateData()
+updateData() // needed so we have an initial load before the setInterval begins at second 10
 
 function updateData() {
     fetch('http://nestio.space/api/satellite/data')
@@ -75,7 +75,7 @@ app.get('/health', async(req, res) => {
     if (averageValue < 160) { // if average value is less than 160
         message = 'WARNING: RAPID ORBITAL DECAY IMMINENT'
     } else { // if greater than 160 we check the previous minute average excluding the last data point
-        dataArrayHealthCopy = dataArrayHealth.slice(0)
+        dataArrayHealthCopy = dataArrayHealth.slice(0) // need a copy otherwise we keep adding to the front of the array after the pop
         while (dataArrayHealthCopy.length > 6) {
             dataArrayHealthCopy.pop()
             oldAverageValue = averageFunction(lastMinuteFilter(dataArrayHealthCopy))
