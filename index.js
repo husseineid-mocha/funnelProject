@@ -1,20 +1,20 @@
-const express = require("express");
-const fetch = require('node-fetch');
+const express = require('express')
+const fetch = require('node-fetch')
 
-const app = express();
+const app = express()
 
 // dataArray will store the values from the last 5 mins
-let dataArray = [];
+let dataArray = []
 
 // the interval that will fetch the data every 10 secs
 setInterval(() => {
     updateData()
 }, 10 * 1000)
 
-//initial load before the setInterval begins at second 10
+// initial load before the setInterval begins at second 10
 updateData()
 
-//function to retrieve the average of an array of integers
+// function to retrieve the average of an array of integers
 function averageFunction(array) {
     const average = array.reduce((sum, value) => {
         return sum + value
@@ -28,7 +28,7 @@ function updateData() {
         .then(data => dataArray.push({ altitude: data.altitude, time: data.last_updated }))
         .then(() => {
             const lastEntry = new Date(dataArray[dataArray.length - 1].time)
-                //filter the dataArray by values that are less than 5 minutes old
+                // filter the dataArray by values that are less than 5 minutes old
             dataArray = dataArray.filter(item => {
                 const instanceEntry = new Date(item.time)
                 return lastEntry.getTime() - instanceEntry.getTime() < (300 * 1000)
@@ -36,11 +36,11 @@ function updateData() {
         })
 }
 
-app.get("/stats", async(req, res) => {
+app.get('/stats', async(req, res) => {
     const altitudes = dataArray.map(obj => obj.altitude)
 
-    const minimum = Math.min(...altitudes);
-    const maximum = Math.max(...altitudes);
+    const minimum = Math.min(...altitudes)
+    const maximum = Math.max(...altitudes)
     const average = averageFunction(altitudes)
 
     const responseData = {
@@ -48,7 +48,7 @@ app.get("/stats", async(req, res) => {
         maximum,
         average
     }
-    res.send(JSON.stringify(responseData));
+    res.send(JSON.stringify(responseData))
 })
 
 function getHealth(dataArray) {
@@ -85,7 +85,7 @@ app.get('/health', async(req, res) => {
 })
 
 // Define a port and start listening for connections.
-const port = 3000;
-app.listen(port, () => console.log(`Listening on port ${port}...`));
+const port = 3000
+app.listen(port, () => console.log(`Listening on port ${port}...`))
 
 module.exports = { getHealth: getHealth }
